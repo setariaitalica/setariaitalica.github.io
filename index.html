@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的作品集</title>
+    <title>作品展示</title>
     <style>
         * {
             margin: 0;
@@ -13,287 +13,271 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            color: #fff;
+            background-color: #ffffff;
             min-height: 100vh;
             overflow-x: hidden;
         }
         
-        .container {
+        /* 滚动进度指示器 */
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, #ff7e5f, #feb47b, #86a8e7, #91eae4);
+            z-index: 1000;
+            transition: width 0.1s ease;
+        }
+        
+        /* 主容器 */
+        .gallery-container {
+            width: 100%;
             max-width: 1400px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 0 20px;
         }
         
-        .header {
-            text-align: center;
-            margin-bottom: 60px;
-            animation: fadeIn 1s ease-out;
-        }
-        
-        .header h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            background: linear-gradient(to right, #ff7e5f, #feb47b, #86a8e7, #91eae4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-            letter-spacing: -1px;
-        }
-        
-        .header p {
-            font-size: 1.2rem;
-            opacity: 0.8;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        
-        .gallery {
+        /* 作品网格 */
+        .gallery-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 25px;
-            margin-bottom: 60px;
+            gap: 30px;
+            padding: 100px 0;
         }
         
-        .gallery-item {
+        /* 网格项样式 */
+        .grid-item {
             position: relative;
             border-radius: 20px;
             overflow: hidden;
             aspect-ratio: 4/3;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #f8f8f8;
             cursor: pointer;
+            opacity: 0;
             transform-style: preserve-3d;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         
-        .gallery-item:hover {
-            transform: translateY(-15px) scale(1.03);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-            border-color: rgba(255, 255, 255, 0.3);
+        /* 不同动画类型的初始化状态 */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
         }
         
-        .gallery-item img {
+        .slide-left {
+            opacity: 0;
+            transform: translateX(50px);
+        }
+        
+        .slide-right {
+            opacity: 0;
+            transform: translateX(-50px);
+        }
+        
+        .zoom-in {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        
+        .rotate-in {
+            opacity: 0;
+            transform: rotateY(15deg) scale(0.9);
+        }
+        
+        /* 激活状态的动画 */
+        .grid-item.active {
+            opacity: 1;
+            transform: translate(0) scale(1) rotate(0);
+        }
+        
+        .grid-item:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 图片样式 */
+        .grid-item img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 1s cubic-bezier(0.2, 0, 0.2, 1);
+            transition: transform 1.2s cubic-bezier(0.2, 0, 0.2, 1);
         }
         
-        .gallery-item:hover img {
-            transform: scale(1.1);
+        .grid-item:hover img {
+            transform: scale(1.08);
         }
         
-        .gallery-item::before {
+        /* 图片加载占位符 */
+        .grid-item::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.8));
-            opacity: 0;
-            transition: opacity 0.5s ease;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
             z-index: 1;
         }
         
-        .gallery-item:hover::before {
-            opacity: 1;
+        .grid-item img.loaded + .grid-item::before {
+            display: none;
         }
         
-        .item-overlay {
+        /* 加载动画 */
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* 悬浮提示效果 */
+        .grid-item::after {
+            content: '';
             position: absolute;
-            bottom: 0;
+            top: 0;
             left: 0;
             width: 100%;
-            padding: 25px;
-            z-index: 2;
-            transform: translateY(20px);
+            height: 100%;
+            background: linear-gradient(to bottom, transparent 60%, rgba(0, 0, 0, 0.1));
             opacity: 0;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: opacity 0.5s ease;
+            z-index: 1;
+            pointer-events: none;
         }
         
-        .gallery-item:hover .item-overlay {
-            transform: translateY(0);
+        .grid-item:hover::after {
             opacity: 1;
         }
         
-        .item-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-        }
-        
-        .item-date {
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-        
-        .view-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+        /* 页面指示器 */
+        .page-indicator {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 3;
-            opacity: 0;
-            transform: scale(0.8);
+            gap: 8px;
+            z-index: 100;
+        }
+        
+        .indicator-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ddd;
             transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
         }
         
-        .gallery-item:hover .view-btn {
-            opacity: 1;
-            transform: scale(1);
+        .indicator-dot.active {
+            background-color: #86a8e7;
+            transform: scale(1.2);
         }
         
-        .view-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.1);
-        }
-        
-        /* 灯箱模态框 */
-        .lightbox {
+        /* 全屏视图 */
+        .fullscreen-view {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 1000;
+            background-color: rgba(255, 255, 255, 0.95);
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 1000;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.4s ease;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
         }
         
-        .lightbox.active {
+        .fullscreen-view.active {
             opacity: 1;
             visibility: visible;
         }
         
-        .lightbox-content {
-            position: relative;
+        .fullscreen-view img {
             max-width: 90%;
             max-height: 90%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .lightbox-content img {
-            max-width: 100%;
-            max-height: 90vh;
+            object-fit: contain;
             border-radius: 10px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
             transform: scale(0.8);
             opacity: 0;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s;
         }
         
-        .lightbox.active .lightbox-content img {
+        .fullscreen-view.active img {
             transform: scale(1);
             opacity: 1;
         }
         
-        .lightbox-close, .lightbox-prev, .lightbox-next {
+        .close-fullscreen {
             position: absolute;
-            background: rgba(255, 255, 255, 0.1);
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
             border: none;
-            color: white;
-            width: 50px;
-            height: 50px;
+            background: rgba(0, 0, 0, 0.1);
             border-radius: 50%;
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-            font-size: 1.2rem;
         }
         
-        .lightbox-close:hover, .lightbox-prev:hover, .lightbox-next:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
+        .close-fullscreen:hover {
+            background: rgba(0, 0, 0, 0.15);
+            transform: rotate(90deg);
         }
         
-        .lightbox-close {
-            top: 20px;
-            right: 20px;
-        }
-        
-        .lightbox-prev {
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-        
-        .lightbox-next {
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-        
-        .image-counter {
-            position: absolute;
+        /* 滚动提示 */
+        .scroll-hint {
+            position: fixed;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.5);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-        
-        .image-info {
-            position: absolute;
-            bottom: 60px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            padding: 0 20px;
-        }
-        
-        .image-title {
-            font-size: 1.8rem;
-            margin-bottom: 5px;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
-        }
-        
-        .image-desc {
-            font-size: 1rem;
-            opacity: 0.8;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 40px 0 20px;
-            font-size: 0.9rem;
+            width: 30px;
+            height: 50px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
             opacity: 0.6;
+            transition: opacity 0.3s ease;
+            z-index: 100;
         }
         
-        /* 动画 */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .scroll-hint::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 10px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 2px;
+            animation: scrollHint 2s infinite;
+        }
+        
+        .scroll-hint.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        @keyframes scrollHint {
+            0% { transform: translateX(-50%) translateY(0); opacity: 1; }
+            100% { transform: translateX(-50%) translateY(20px); opacity: 0; }
+        }
+        
+        /* 动效类 */
+        .float {
+            animation: float 6s ease-in-out infinite;
         }
         
         @keyframes float {
@@ -301,286 +285,332 @@
             50% { transform: translateY(-10px); }
         }
         
-        .float-animation {
-            animation: float 6s ease-in-out infinite;
+        .pulse {
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05); }
+            50% { box-shadow: 0 10px 30px rgba(134, 168, 231, 0.15); }
         }
         
         /* 响应式设计 */
         @media (max-width: 1100px) {
-            .gallery {
+            .gallery-grid {
                 grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 20px;
             }
         }
         
         @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2.5rem;
-            }
-            
-            .gallery {
+            .gallery-grid {
                 grid-template-columns: 1fr;
                 max-width: 500px;
-                margin-left: auto;
-                margin-right: auto;
+                margin: 0 auto;
             }
             
-            .lightbox-prev, .lightbox-next {
-                width: 40px;
-                height: 40px;
+            .page-indicator {
+                bottom: 20px;
+                right: 20px;
             }
-            
-            .lightbox-close {
-                top: 10px;
-                right: 10px;
-            }
-        }
-        
-        /* 加载动画 */
-        .gallery-item.loading {
-            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-        }
-        
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1>作品展示</h1>
-            <p>点击任意图片查看大图，使用键盘左右箭头浏览所有作品</p>
-        </header>
-        
-        <div class="gallery" id="gallery">
+    <!-- 滚动进度指示器 -->
+    <div class="scroll-progress" id="scrollProgress"></div>
+    
+    <!-- 主画廊容器 -->
+    <div class="gallery-container">
+        <div class="gallery-grid" id="galleryGrid">
             <!-- 图片项将通过JavaScript动态生成 -->
         </div>
-        
-        <div class="lightbox" id="lightbox">
-            <button class="lightbox-close" id="closeLightbox">&times;</button>
-            <button class="lightbox-prev" id="prevImage">‹</button>
-            <div class="lightbox-content">
-                <img id="lightboxImage" src="" alt="">
-                <div class="image-info">
-                    <h2 id="lightboxTitle" class="image-title"></h2>
-                    <p id="lightboxDesc" class="image-desc"></p>
-                </div>
-                <div id="imageCounter" class="image-counter"></div>
-            </div>
-            <button class="lightbox-next" id="nextImage">›</button>
-        </div>
-        
-        <footer class="footer">
-            <p>使用键盘方向键 ← → 浏览图片 | ESC键关闭大图</p>
-        </footer>
     </div>
+    
+    <!-- 全屏查看 -->
+    <div class="fullscreen-view" id="fullscreenView">
+        <img src="" alt="">
+        <button class="close-fullscreen" id="closeFullscreen">&times;</button>
+    </div>
+    
+    <!-- 页面指示器 -->
+    <div class="page-indicator" id="pageIndicator"></div>
+    
+    <!-- 滚动提示 -->
+    <div class="scroll-hint" id="scrollHint"></div>
 
     <script>
-        // 图片数据 - 请根据你的实际图片修改这里的文件名和描述
+        // 图片数据 - 修改这里的文件名以匹配你的图片
         const images = [
-            { 
-                filename: "排版.jpg", 
-                title: "项目一：现代网页设计", 
-                description: "响应式网页设计，采用现代UI/UX设计理念",
-                date: "2024年1月"
-            },
-            { 
-                filename: "project2.jpg", 
-                title: "项目二：移动应用界面", 
-                description: "跨平台移动应用设计，注重用户体验和交互流畅性",
-                date: "2024年2月"
-            },
-            { 
-                filename: "project3.jpg", 
-                title: "项目三：品牌视觉系统", 
-                description: "完整的企业品牌视觉识别系统设计",
-                date: "2024年3月"
-            },
-            { 
-                filename: "project4.jpg", 
-                title: "项目四：数据可视化面板", 
-                description: "交互式数据可视化界面，支持实时数据更新",
-                date: "2024年4月"
-            },
-            { 
-                filename: "project5.jpg", 
-                title: "项目五：电商平台设计", 
-                description: "完整的电子商务平台界面与用户体验设计",
-                date: "2024年5月"
-            },
-            { 
-                filename: "project6.jpg", 
-                title: "项目六：插画作品集", 
-                description: "数字插画与平面设计作品展示",
-                date: "2024年6月"
-            }
+            { filename: "排版.jpg" },
+            { filename: "2.jpg" },
+            { filename: "3.jpg" },
+            { filename: "4.jpg" },
+            { filename: "5.jpg" },
+            { filename: "6.jpg" },
+            { filename: "7.jpg" },
+            { filename: "8.jpg" },
+            { filename: "9.jpg" },
+            { filename: "10.jpg" },
+            { filename: "11.jpg" },
+            { filename: "12.jpg" }
         ];
         
         // 获取DOM元素
-        const gallery = document.getElementById('gallery');
-        const lightbox = document.getElementById('lightbox');
-        const lightboxImage = document.getElementById('lightboxImage');
-        const lightboxTitle = document.getElementById('lightboxTitle');
-        const lightboxDesc = document.getElementById('lightboxDesc');
-        const closeLightbox = document.getElementById('closeLightbox');
-        const prevImage = document.getElementById('prevImage');
-        const nextImage = document.getElementById('nextImage');
-        const imageCounter = document.getElementById('imageCounter');
+        const galleryGrid = document.getElementById('galleryGrid');
+        const scrollProgress = document.getElementById('scrollProgress');
+        const pageIndicator = document.getElementById('pageIndicator');
+        const scrollHint = document.getElementById('scrollHint');
+        const fullscreenView = document.getElementById('fullscreenView');
+        const fullscreenImg = fullscreenView.querySelector('img');
+        const closeFullscreen = document.getElementById('closeFullscreen');
         
-        let currentImageIndex = 0;
+        // 动画类型
+        const animationTypes = ['fade-in', 'slide-left', 'slide-right', 'zoom-in', 'rotate-in'];
         
         // 初始化画廊
         function initGallery() {
-            gallery.innerHTML = '';
+            // 清空画廊
+            galleryGrid.innerHTML = '';
             
+            // 创建图片项
             images.forEach((image, index) => {
-                const galleryItem = document.createElement('div');
-                galleryItem.className = 'gallery-item';
-                galleryItem.dataset.index = index;
+                const gridItem = document.createElement('div');
+                gridItem.className = `grid-item ${animationTypes[index % animationTypes.length]}`;
+                gridItem.dataset.index = index;
                 
-                // 添加加载动画类
-                galleryItem.classList.add('loading');
+                // 创建图片元素
+                const img = document.createElement('img');
+                img.src = `images/${image.filename}`;
+                img.alt = `作品 ${index + 1}`;
+                img.loading = "lazy"; // 延迟加载
                 
-                galleryItem.innerHTML = `
-                    <img src="images/${image.filename}" alt="${image.title}" loading="lazy" onload="this.parentElement.classList.remove('loading')">
-                    <div class="item-overlay">
-                        <h3 class="item-title">${image.title}</h3>
-                        <p class="item-date">${image.date}</p>
-                    </div>
-                    <button class="view-btn" aria-label="查看大图">🔍</button>
-                `;
+                // 图片加载完成后移除占位符
+                img.onload = () => {
+                    img.classList.add('loaded');
+                };
                 
-                // 点击图片打开灯箱
-                galleryItem.addEventListener('click', () => openLightbox(index));
+                // 图片加载失败处理
+                img.onerror = () => {
+                    console.warn(`图片加载失败: images/${image.filename}`);
+                    // 可以设置一个占位图片
+                };
                 
-                // 点击查看按钮也打开灯箱
-                const viewBtn = galleryItem.querySelector('.view-btn');
-                viewBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    openLightbox(index);
-                });
+                // 点击打开全屏
+                gridItem.addEventListener('click', () => openFullscreen(index));
                 
-                gallery.appendChild(galleryItem);
+                // 添加到网格项
+                gridItem.appendChild(img);
+                
+                // 添加到画廊
+                galleryGrid.appendChild(gridItem);
             });
             
-            // 添加浮动动画到部分项目
-            document.querySelectorAll('.gallery-item').forEach((item, index) => {
-                if (index % 2 === 0) {
-                    item.classList.add('float-animation');
-                    item.style.animationDelay = `${index * 0.2}s`;
+            // 创建页面指示器
+            createPageIndicator();
+            
+            // 初始加载时触发一次滚动检测
+            setTimeout(() => {
+                checkScroll();
+            }, 100);
+        }
+        
+        // 创建页面指示器
+        function createPageIndicator() {
+            pageIndicator.innerHTML = '';
+            
+            // 计算需要多少个指示点（每4个图片一个点）
+            const indicatorCount = Math.ceil(images.length / 4);
+            
+            for (let i = 0; i < indicatorCount; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'indicator-dot';
+                dot.dataset.section = i;
+                pageIndicator.appendChild(dot);
+            }
+        }
+        
+        // 检查滚动位置并触发动画
+        function checkScroll() {
+            const gridItems = document.querySelectorAll('.grid-item');
+            const windowHeight = window.innerHeight;
+            const scrollTop = window.scrollY;
+            const scrollBottom = scrollTop + windowHeight;
+            
+            // 更新滚动进度
+            const scrollHeight = document.documentElement.scrollHeight - windowHeight;
+            const scrollPercent = (scrollTop / scrollHeight) * 100;
+            scrollProgress.style.width = `${scrollPercent}%`;
+            
+            // 检查每个网格项
+            gridItems.forEach((item, index) => {
+                const rect = item.getBoundingClientRect();
+                const itemTop = rect.top + scrollTop;
+                const itemBottom = itemTop + rect.height;
+                
+                // 如果元素在视口中
+                if (itemBottom > scrollTop && itemTop < scrollBottom) {
+                    const visibility = Math.min(
+                        1,
+                        Math.max(0, (Math.min(itemBottom, scrollBottom) - Math.max(itemTop, scrollTop)) / rect.height)
+                    );
+                    
+                    // 根据可见性设置动画
+                    if (visibility > 0.3 && !item.classList.contains('active')) {
+                        // 添加延迟，使动画错开
+                        item.style.transitionDelay = `${(index % 6) * 0.1}s`;
+                        item.classList.add('active');
+                        
+                        // 添加浮动或脉动效果
+                        if (index % 4 === 0) {
+                            item.classList.add('float');
+                        } else if (index % 4 === 2) {
+                            item.classList.add('pulse');
+                        }
+                    }
+                }
+            });
+            
+            // 更新页面指示器
+            updatePageIndicator();
+            
+            // 隐藏滚动提示
+            if (scrollTop > 100) {
+                scrollHint.classList.add('hidden');
+            }
+        }
+        
+        // 更新页面指示器
+        function updatePageIndicator() {
+            const dots = document.querySelectorAll('.indicator-dot');
+            const scrollTop = window.scrollY;
+            const windowHeight = window.innerHeight;
+            const scrollSection = Math.floor(scrollTop / windowHeight);
+            
+            dots.forEach((dot, index) => {
+                if (index === scrollSection) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
                 }
             });
         }
         
-        // 打开灯箱显示大图
-        function openLightbox(index) {
-            currentImageIndex = index;
-            updateLightbox();
-            lightbox.classList.add('active');
+        // 打开全屏视图
+        function openFullscreen(index) {
+            const image = images[index];
+            fullscreenImg.src = `images/${image.filename}`;
+            fullscreenView.classList.add('active');
             document.body.style.overflow = 'hidden'; // 防止背景滚动
         }
         
-        // 更新灯箱内容
-        function updateLightbox() {
-            const image = images[currentImageIndex];
-            lightboxImage.src = `images/${image.filename}`;
-            lightboxTitle.textContent = image.title;
-            lightboxDesc.textContent = image.description;
-            imageCounter.textContent = `${currentImageIndex + 1} / ${images.length}`;
-            
-            // 添加图片加载处理
-            lightboxImage.onload = () => {
-                lightboxImage.style.opacity = 1;
-            };
-            
-            lightboxImage.style.opacity = 0;
-        }
-        
-        // 关闭灯箱
-        function closeLightboxFunc() {
-            lightbox.classList.remove('active');
+        // 关闭全屏视图
+        function closeFullscreenView() {
+            fullscreenView.classList.remove('active');
             document.body.style.overflow = 'auto';
         }
         
-        // 显示上一张图片
-        function showPrevImage() {
-            currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
-            updateLightbox();
-        }
-        
-        // 显示下一张图片
-        function showNextImage() {
-            currentImageIndex = (currentImageIndex + 1) % images.length;
-            updateLightbox();
-        }
-        
-        // 事件监听
-        closeLightbox.addEventListener('click', closeLightboxFunc);
-        prevImage.addEventListener('click', showPrevImage);
-        nextImage.addEventListener('click', showNextImage);
-        
-        // 点击灯箱背景关闭
-        lightbox.addEventListener('click', (e) => {
-            if (e.target === lightbox) {
-                closeLightboxFunc();
-            }
-        });
-        
-        // 键盘快捷键
-        document.addEventListener('keydown', (e) => {
-            if (!lightbox.classList.contains('active')) return;
+        // 全屏视图切换
+        function navigateFullscreen(direction) {
+            const currentIndex = parseInt(fullscreenImg.dataset.index || 0);
+            let newIndex = currentIndex + direction;
             
-            switch(e.key) {
-                case 'Escape':
-                    closeLightboxFunc();
-                    break;
-                case 'ArrowLeft':
-                    showPrevImage();
-                    break;
-                case 'ArrowRight':
-                    showNextImage();
-                    break;
-            }
-        });
-        
-        // 触摸滑动支持
-        let touchStartX = 0;
-        let touchEndX = 0;
-        
-        lightbox.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-        });
-        
-        lightbox.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        });
-        
-        function handleSwipe() {
-            const swipeThreshold = 50;
+            if (newIndex < 0) newIndex = images.length - 1;
+            if (newIndex >= images.length) newIndex = 0;
             
-            if (touchEndX < touchStartX - swipeThreshold) {
-                // 向左滑动，下一张
-                showNextImage();
-            }
-            
-            if (touchEndX > touchStartX + swipeThreshold) {
-                // 向右滑动，上一张
-                showPrevImage();
-            }
+            const image = images[newIndex];
+            fullscreenImg.src = `images/${image.filename}`;
+            fullscreenImg.dataset.index = newIndex;
         }
         
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
             initGallery();
             
-            // 添加一些随机动画延迟
-            document.querySelectorAll('.gallery-item').forEach((item, index) => {
-                item.style.animationDelay = `${index * 0.1}s`;
+            // 滚动事件监听
+            window.addEventListener('scroll', checkScroll);
+            window.addEventListener('resize', checkScroll);
+            
+            // 全屏视图事件
+            closeFullscreen.addEventListener('click', closeFullscreenView);
+            
+            // 点击全屏背景关闭
+            fullscreenView.addEventListener('click', (e) => {
+                if (e.target === fullscreenView) {
+                    closeFullscreenView();
+                }
             });
+            
+            // 键盘控制
+            document.addEventListener('keydown', (e) => {
+                if (fullscreenView.classList.contains('active')) {
+                    switch(e.key) {
+                        case 'Escape':
+                            closeFullscreenView();
+                            break;
+                        case 'ArrowLeft':
+                            navigateFullscreen(-1);
+                            break;
+                        case 'ArrowRight':
+                            navigateFullscreen(1);
+                            break;
+                    }
+                }
+            });
+            
+            // 触摸滑动支持
+            let touchStartX = 0;
+            let touchStartY = 0;
+            
+            fullscreenView.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            });
+            
+            fullscreenView.addEventListener('touchend', (e) => {
+                if (!fullscreenView.classList.contains('active')) return;
+                
+                const touchEndX = e.changedTouches[0].clientX;
+                const touchEndY = e.changedTouches[0].clientY;
+                
+                const diffX = touchStartX - touchEndX;
+                const diffY = touchStartY - touchEndY;
+                
+                // 水平滑动切换图片
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 30) {
+                    if (diffX > 0) {
+                        // 向左滑动，下一张
+                        navigateFullscreen(1);
+                    } else {
+                        // 向右滑动，上一张
+                        navigateFullscreen(-1);
+                    }
+                }
+                
+                // 垂直滑动关闭
+                if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 100) {
+                    if (diffY > 0) {
+                        closeFullscreenView();
+                    }
+                }
+            });
+            
+            // 初始滚动提示
+            setTimeout(() => {
+                if (window.scrollY === 0) {
+                    scrollHint.classList.remove('hidden');
+                }
+            }, 1000);
+        });
+        
+        // 防抖优化滚动事件
+        let scrollTimeout;
+        window.addEventListener('scroll', () => {
+            if (scrollTimeout) {
+                window.cancelAnimationFrame(scrollTimeout);
+            }
+            
+            scrollTimeout = window.requestAnimationFrame(checkScroll);
         });
     </script>
 </body>
